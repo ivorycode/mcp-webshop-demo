@@ -87,11 +87,18 @@ Der Chat-Guard übergibt standardmässig höchstens die letzten 15 Nachrichten a
 
 ## MCP und MCP Apps
 
-Der Endpunkt `/mcp` bietet dieselben fünf Tools plus `getOrders` für externe Agenten an. Ohne Browser-Session nennt der Agent das Demo-Konto ausdrücklich als `loginId`. Jedes Tool verweist auf eine der beiden HTML-Resources `ui://webshop/search-ui.html` und `ui://webshop/cart-ui.html`, die ein geeigneter Host als MCP App rendert.
+Zwei Streamable-HTTP-Endpunkte bieten dieselben fünf Tools plus `getOrders` für externe Agenten an. Ohne Browser-Session nennt der Agent das Demo-Konto ausdrücklich als `loginId`. Beide teilen den Shop-Zustand mit der Web-API.
+
+| Endpunkt   | Server            | Inhalt                                                                                                                                                                                                                                              |
+| ---------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/mcp`     | `webshop-mcp`     | Nur Tools mit Text- und Datenresultaten, kein UI ([`features/mcp/server.ts`](./src/features/mcp/server.ts))                                                                                                                                         |
+| `/mcp-app` | `webshop-mcp-app` | Dieselben Tools; jedes verweist auf eine der HTML-Resources `ui://webshop/search-ui.html` und `ui://webshop/cart-ui.html`, die ein geeigneter Host als MCP App rendert ([`features/mcp-apps/app-server.ts`](./src/features/mcp-apps/app-server.ts)) |
+
+Für Demos in ChatGPT oder claude.ai je einen Connector pro Endpunkt einrichten, z. B. «Transgourmet Webshop» (`/mcp`) und «Transgourmet Webshop (App)» (`/mcp-app`), und jeweils nur einen aktivieren. Sonst sieht das Modell jedes Tool doppelt.
 
 ```bash
 npm run inspector      # MCP Inspector mit den Zielen aus inspector.json
-npm run start:stdio    # derselbe Server über stdio, eigener Prozess und Zustand
+npm run start:stdio    # der MCP-App-Server über stdio, eigener Prozess und Zustand
 ```
 
 Die MCP Apps prüfen vor Kontextmeldungen und Chat-Nachrichten die Host-Capabilities. Im MCP Inspector fehlen `updateModelContext` und `message`; Hinzufügen, Entfernen und Checkout funktionieren dort ohne diese optionalen Benachrichtigungen. Fehler einer Benachrichtigung werden nur in der Konsole protokolliert und ändern den erfolgreichen Shop-Vorgang nicht.
@@ -116,7 +123,7 @@ npm run dev:mcp-host
 
 Danach [http://127.0.0.1:43552](http://127.0.0.1:43552) öffnen, App auswählen
 und «App laden» klicken. Der Befehl startet den Host auf Port 43552 und seine
-Sandbox auf Port 43553; er verbindet sich standardmässig mit `http://localhost:3052/mcp`.
+Sandbox auf Port 43553; er verbindet sich standardmässig mit `http://localhost:3052/mcp-app`.
 Der Host verwendet damit dieselben Warenkörbe wie dein Dev-Webshop. Browser-DevTools
 können zur Inspektion der Frames und Nachrichten verwendet werden.
 

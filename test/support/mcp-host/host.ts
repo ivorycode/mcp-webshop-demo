@@ -170,7 +170,7 @@ form.addEventListener('submit', (event) => {
 })
 try {
   await client.connect(
-    new StreamableHTTPClientTransport(new URL('/mcp', location.href)),
+    new StreamableHTTPClientTransport(new URL('/mcp-app', location.href)),
   )
   status.textContent = 'Verbunden'
   button.disabled = false

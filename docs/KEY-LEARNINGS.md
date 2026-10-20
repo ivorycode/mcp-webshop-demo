@@ -136,7 +136,7 @@ Das Konfigurationsformat ist clientabhängig. Der Client fragt über `tools/list
 **Server instanziieren und Tools registrieren.** [mcp/server.ts](../src/features/mcp/server.ts), `buildMcpServer()`, erzeugt eine `McpServer`-Instanz und registriert die Tools mit `server.registerTool(...)`. Beispiel, auf die wesentlichen Teile gekürzt:
 
 ```ts
-const server = new McpServer({ name: 'webshop-mcp-app', version: '3.0.0' })
+const server = new McpServer({ name: 'webshop-mcp', version: '3.0.0' })
 
 server.registerTool(
   'addToCart',
@@ -158,6 +158,8 @@ server.registerTool(
 ```
 
 `withLoginId` ergänzt das Schema um das Demo-Konto; `withAccount` prüft es. Der Handler verwendet **dieselbe Serverlogik wie der App-Chat**. Der externe Agent bringt keine Browser-Session mit und nennt deshalb `loginId` ausdrücklich.
+
+Dieser Server unter `/mcp` liefert nur Tools, kein UI. Die MCP-App-Variante unter `/mcp-app` ([mcp-apps/app-server.ts](../src/features/mcp-apps/app-server.ts), `buildMcpAppServer()`) registriert dieselben Tools über `registerShopTools(server, uiMeta)` mit `_meta.ui.resourceUri` pro Tool und ergänzt die HTML-Resources.
 
 **MCP-Protokoll um die Funktionen legen.** [mcp/handler.ts](../src/features/mcp/handler.ts) verbindet die Server-Factory mit dem Transport:
 

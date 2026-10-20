@@ -5,7 +5,7 @@
 `npm test` baut die App (die MCP Apps werden als Resources aus `dist/` gelesen) und führt dann die Node-Tests aus:
 
 - `src/**/*.test.ts`: Shop-Zustand und Mengenregel, Chat-Guard, WebMCP-Tools, Katalogkonfiguration, MCP-Guard, Shop-Events.
-- `test/mcp-smoke.test.mjs`: echter MCP-Client über Streamable HTTP und stdio; prüft Tools, Resources, Kontotrennung und dass Web-API und MCP denselben Zustand teilen.
+- `test/mcp-smoke.test.mjs`: echter MCP-Client über Streamable HTTP und stdio; prüft Tools, Resources, Kontotrennung, dass `/mcp` dieselben Tools ohne UI-Metadaten und Resources liefert und dass Web-API und beide MCP-Endpunkte denselben Zustand teilen.
 - `test/prod-process.test.mjs`: Produktionsstart über `server.mjs` mit Healthcheck, Assets und MCP-Resources.
 
 Nur MCP: `npm run test:mcp`. Die vollständige Tool-Abdeckung über beide Transporte
@@ -34,12 +34,12 @@ Die Chat-Tests simulieren den AI-SDK-Nachrichtenstream und brauchen keinen Model
 
 Playwright startet automatisch vier lokale Dienste; die Ports müssen frei sein:
 
-| Dienst          | Adresse                      |
-| --------------- | ---------------------------- |
-| Mock-Katalog    | `http://127.0.0.1:43555`     |
-| Webshop mit MCP | `http://127.0.0.1:43554/mcp` |
-| Testhost        | `http://127.0.0.1:43552`     |
-| Sandbox         | `http://127.0.0.1:43553`     |
+| Dienst          | Adresse                                     |
+| --------------- | ------------------------------------------- |
+| Mock-Katalog    | `http://127.0.0.1:43555`                    |
+| Webshop mit MCP | `http://127.0.0.1:43554/mcp` und `/mcp-app` |
+| Testhost        | `http://127.0.0.1:43552`                    |
+| Sandbox         | `http://127.0.0.1:43553`                    |
 
 Alle Projects verwenden einen Worker, weil die Demo-Konten ihren Zustand im Serverprozess teilen. Vor jedem MCP-App-Test werden die Demo-Warenkörbe über MCP geleert. Bei Fehlern speichert Playwright Traces unter `test-results/`; öffnen mit `npx playwright show-trace <pfad>/trace.zip`.
 

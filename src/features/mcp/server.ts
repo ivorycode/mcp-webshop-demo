@@ -1,7 +1,8 @@
 // MCP-Server des Webshops: Dieselben Contracts wie Chat und WebMCP, ergänzt um
 // die loginId. Ein externer Agent hat keine Browser-Session; er nennt das
-// Demo-Konto ausdrücklich. Jedes Tool verweist zusätzlich auf eine MCP App
-// (HTML-Resource), die ein geeigneter Host neben dem Resultat rendert.
+// Demo-Konto ausdrücklich. Dieser Server liefert nur Tools mit Text- und
+// Datenresultaten, kein UI. Die MCP-App-Variante (features/mcp-apps/app-server.ts)
+// registriert dieselben Tools mit UI-Metadaten und ergänzt die HTML-Resources.
 
 import { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
@@ -16,12 +17,6 @@ import {
 } from '../../lib/tools/contracts.ts'
 import { toolHandlers } from '../../lib/tools/handlers.server.ts'
 import type { CartResult } from '../../lib/tools/results.ts'
-import { registerUiResources } from '../mcp-apps/register-ui-resources.ts'
-import {
-  CART_UI_URI,
-  SEARCH_UI_URI,
-  uiToolMeta,
-} from '../mcp-apps/resource-meta.ts'
 
 const loginIdInput = z
   .string()
@@ -30,6 +25,11 @@ const loginIdInput = z
   .describe(
     `Login-ID eines Demo-Kontos: ${DEMO_ACCOUNTS.map((a) => a.loginId).join(', ')}.`,
   )
+
+// Nur die Such-App braucht ein Konto für ihren «In den Warenkorb»-Button.
+const searchWithLoginInput = searchProductsInput.extend({
+  loginId: loginIdInput.optional(),
+})
 
 const withLoginId = <T extends z.ZodRawShape>(schema: z.ZodObject<T>) =>
   schema.extend({ loginId: loginIdInput })
@@ -80,27 +80,43 @@ function cartPayload<T extends CartResult>(loginId: string, data: T) {
   return { ...data, loginId, orders: shop.getOrders(loginId) }
 }
 
-export function buildMcpServer(): McpServer {
-  const server = new McpServer({ name: 'webshop-mcp-app', version: '3.0.0' })
+export type ShopToolName =
+  | 'searchProducts'
+  | 'getCart'
+  | 'addToCart'
+  | 'removeFromCart'
+  | 'checkout'
+  | 'getOrders'
 
+/** UI-Metadaten pro Tool; nur die MCP-App-Variante übergibt sie. */
+export type ToolUiMeta = Record<ShopToolName, Record<string, unknown>>
+
+/** Text-Server: nur Tools, keine Resources. */
+export function buildMcpServer(): McpServer {
+  const server = new McpServer({ name: 'webshop-mcp', version: '3.0.0' })
+  registerShopTools(server)
+  return server
+}
+
+/** Registriert die sechs Shop-Tools, mit uiMeta zusätzlich für MCP Apps. */
+export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
+  const searchDescription = uiMeta
+    ? `${toolDescriptions.searchProducts} Mit loginId kann die Such-App Artikel direkt in den Warenkorb legen.`
+    : toolDescriptions.searchProducts
   server.registerTool(
     'searchProducts',
     {
       title: 'Produkte suchen',
-      description: `${toolDescriptions.searchProducts} Mit loginId kann die Such-App Artikel direkt in den Warenkorb legen.`,
-      // Die loginId wird nur an die Such-App durchgereicht, damit deren
-      // «In den Warenkorb»-Button ein Konto kennt.
-      inputSchema: searchProductsInput.extend({
-        loginId: loginIdInput.optional(),
-      }),
+      description: searchDescription,
+      inputSchema: uiMeta ? searchWithLoginInput : searchProductsInput,
       annotations: { readOnlyHint: true, idempotentHint: true },
-      _meta: uiToolMeta(SEARCH_UI_URI),
+      _meta: uiMeta?.searchProducts,
     },
-    async ({ term, loginId }) => {
+    async ({ term, loginId }: z.infer<typeof searchWithLoginInput>) => {
       if (loginId && !findAccount(loginId)) return invalidLogin(loginId)
       const data = await toolHandlers.searchProducts({ term })
       return toolResult(
-        { ...data, loginId: loginId ?? null },
+        uiMeta ? { ...data, loginId: loginId ?? null } : data,
         data.ok
           ? `${data.shownCount} Produkte für "${data.searchTerm}" gefunden.`
           : data.error,
@@ -115,7 +131,7 @@ export function buildMcpServer(): McpServer {
       description: toolDescriptions.getCart,
       inputSchema: withLoginId(emptyInput),
       annotations: { readOnlyHint: true, idempotentHint: true },
-      _meta: uiToolMeta(CART_UI_URI),
+      _meta: uiMeta?.getCart,
     },
     withAccount((loginId) => {
       const data = cartPayload(loginId, toolHandlers.getCart(loginId))
@@ -139,7 +155,7 @@ export function buildMcpServer(): McpServer {
         destructiveHint: false,
         idempotentHint: false,
       },
-      _meta: uiToolMeta(CART_UI_URI),
+      _meta: uiMeta?.addToCart,
     },
     withAccount(async (loginId, { articleNumber, quantity }) => {
       const data = await toolHandlers.addToCart(loginId, {
@@ -164,7 +180,7 @@ export function buildMcpServer(): McpServer {
         destructiveHint: true,
         idempotentHint: true,
       },
-      _meta: uiToolMeta(CART_UI_URI),
+      _meta: uiMeta?.removeFromCart,
     },
     withAccount((loginId, { articleNumber }) => {
       const data = toolHandlers.removeFromCart(loginId, { articleNumber })
@@ -187,7 +203,7 @@ export function buildMcpServer(): McpServer {
         idempotentHint: false,
         openWorldHint: false,
       },
-      _meta: uiToolMeta(CART_UI_URI),
+      _meta: uiMeta?.checkout,
     },
     withAccount((loginId) => {
       const data = toolHandlers.checkout(loginId)
@@ -209,14 +225,11 @@ export function buildMcpServer(): McpServer {
       description: 'Zeigt die letzten Bestellungen des Demo-Kontos.',
       inputSchema: withLoginId(emptyInput),
       annotations: { readOnlyHint: true, idempotentHint: true },
-      _meta: uiToolMeta(CART_UI_URI),
+      _meta: uiMeta?.getOrders,
     },
     withAccount((loginId) => {
       const data = cartPayload(loginId, toolHandlers.getCart(loginId))
       return toolResult(data, `${data.orders.length} Bestellungen gefunden.`)
     }),
   )
-
-  registerUiResources(server)
-  return server
 }

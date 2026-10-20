@@ -31,7 +31,7 @@ flowchart TB
     Chat --> ChatAPI["/api/chat"]
     ChatAPI <--> LLM["Sprachmodell"]
     ChatAPI --> AITools["AI-SDK-Tools"]
-    Agent --> MCP["MCP-Endpunkt /mcp (features/mcp)"]
+    Agent --> MCP["MCP-Endpunkte /mcp und /mcp-app (features/mcp, features/mcp-apps)"]
     MCPApp -->|callServerTool| MCP
     REST --> Shop["Shop-Modul (lib/shop.server.ts)"]
     AITools --> Handlers["Tool-Handler (lib/tools)"]
@@ -67,6 +67,6 @@ Die Pfeile zeigen Aufrufwege; Rückgaben sind weggelassen. Gelb hinterlegte Boxe
 ## Bewusste Vereinfachungen der Demo
 
 - Die Kontoauswahl ist keine Authentifizierung. Das Cookie wird nicht verifiziert, MCP akzeptiert jede bekannte `loginId`.
-- Der Zustand liegt im Prozessspeicher. `/mcp` und die Web-API teilen ihn; `npm run start:stdio` ist ein eigener Prozess mit eigenem Zustand.
+- Der Zustand liegt im Prozessspeicher. `/mcp`, `/mcp-app` und die Web-API teilen ihn; `npm run start:stdio` ist ein eigener Prozess mit eigenem Zustand.
 - Checkout erzeugt eine lokale Bestellung; es findet kein externer Checkout statt.
-- Die Chat-Route begrenzt Body-Grösse, Nachrichtenanzahl, Anfragen pro Minute, Schritte, Tokens und Laufzeit (`features/chat/server/chat-guard.server.ts`). Für den öffentlichen MCP-Endpunkt gibt es einen optionalen, lokal inaktiven Schutz (`features/mcp/public-demo-guard.server.ts`).
+- Die Chat-Route begrenzt Body-Grösse, Nachrichtenanzahl, Anfragen pro Minute, Schritte, Tokens und Laufzeit (`features/chat/server/chat-guard.server.ts`). Für die öffentlichen MCP-Endpunkte gibt es einen optionalen, lokal inaktiven Schutz (`features/mcp/public-demo-guard.server.ts`).

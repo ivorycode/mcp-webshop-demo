@@ -33,7 +33,7 @@ async function freePort() {
   return port
 }
 
-test('real Streamable HTTP exposes the account-based MCP tools', async (t) => {
+test('real Streamable HTTP exposes the account-based MCP tools with and without UI', async (t) => {
   const port = await freePort()
   const mockPort = await freePort()
   await startMockCatalog(t, mockPort)
@@ -68,7 +68,7 @@ test('real Streamable HTTP exposes the account-based MCP tools', async (t) => {
     diagnostics += chunk
   })
 
-  const endpoint = new URL(`http://127.0.0.1:${port}/mcp`)
+  const endpoint = new URL(`http://127.0.0.1:${port}/mcp-app`)
   for (let attempt = 0; attempt < 80; attempt++) {
     try {
       const response = await fetch(endpoint)
@@ -214,6 +214,44 @@ test('real Streamable HTTP exposes the account-based MCP tools', async (t) => {
     },
   })
   assert.notEqual(next.structuredContent?.cartId, orderId)
+
+  // /mcp: dieselben Tools und derselbe Shop-Zustand, aber kein UI.
+  const textClient = new Client({ name: 'http-text-smoke', version: '1.0.0' })
+  t.after(() => textClient.close())
+  await textClient.connect(
+    new StreamableHTTPClientTransport(new URL('/mcp', endpoint)),
+  )
+  assert.equal(textClient.getServerVersion()?.name, 'webshop-mcp')
+  assert.equal(textClient.getServerCapabilities()?.resources, undefined)
+  const textTools = await textClient.listTools()
+  assert.deepEqual(
+    textTools.tools.map(({ name }) => name).sort(),
+    expectedTools,
+  )
+  for (const tool of textTools.tools) {
+    assert.equal(tool._meta?.ui, undefined, tool.name)
+    assert.equal(tool._meta?.['ui/resourceUri'], undefined, tool.name)
+  }
+  const textSearch = textTools.tools.find(
+    ({ name }) => name === 'searchProducts',
+  )
+  assert.equal(textSearch?.inputSchema?.properties?.loginId, undefined)
+  assert.doesNotMatch(textSearch?.description ?? '', /Such-App/)
+  assert.deepEqual((await textClient.listResources()).resources, [])
+  const textCart = await textClient.callTool({
+    name: 'getCart',
+    arguments: { loginId: 'hotel-alpenblick' },
+  })
+  assert.equal(
+    textCart.structuredContent?.cartId,
+    next.structuredContent?.cartId,
+  )
+  const textSearchResult = await textClient.callTool({
+    name: 'searchProducts',
+    arguments: { term: 'Milch' },
+  })
+  assert.equal(textSearchResult.structuredContent?.ok, true, diagnostics)
+  assert.equal('loginId' in textSearchResult.structuredContent, false)
 })
 
 test('real stdio uses the same MCP server factory', async (t) => {

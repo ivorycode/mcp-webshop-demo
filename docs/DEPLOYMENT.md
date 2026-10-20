@@ -61,21 +61,21 @@ curl --fail http://localhost:3000/health
 1. `/health` liefert `{"status":"ok"}`.
 2. Die Website lädt; eine Produktsuche liefert Daten und Bilder aus dem Live-Katalog.
 3. `/chat` beantwortet eine Anfrage und kann ein Shop-Tool aufrufen.
-4. Ein MCP-Client oder der Inspector verbindet sich mit `/mcp`, listet Tools und führt `searchProducts` aus.
-5. Die MCP-App-Resources werden im Inspector angezeigt.
+4. Ein MCP-Client oder der Inspector verbindet sich mit `/mcp`, listet Tools und führt `searchProducts` aus; Resources gibt es dort keine.
+5. Über `/mcp-app` werden zusätzlich die MCP-App-Resources im Inspector angezeigt.
 6. Im vorbereiteten Browser mit WebMCP-Flag registriert die Website ihre Tools.
 
 ## MCP Inspector gegen die Fly-App
 
-Die deployte App hat **einen** öffentlichen Streamable-HTTP-Endpunkt: `https://mcp-webshop-demo.fly.dev/mcp`. Darüber liefert der Server die MCP-Tools und die beiden MCP-App-Resources **Webshop Produktsuche** (`ui://webshop/search-ui.html`) und **Webshop Warenkorb** (`ui://webshop/cart-ui.html`). WebMCP läuft ausschliesslich im Browser und kann nicht mit dem Inspector verbunden werden.
+Die deployte App hat **zwei** öffentliche Streamable-HTTP-Endpunkte: `https://mcp-webshop-demo.fly.dev/mcp` liefert nur die MCP-Tools ohne UI, `https://mcp-webshop-demo.fly.dev/mcp-app` dieselben Tools plus die beiden MCP-App-Resources **Webshop Produktsuche** (`ui://webshop/search-ui.html`) und **Webshop Warenkorb** (`ui://webshop/cart-ui.html`). WebMCP läuft ausschliesslich im Browser und kann nicht mit dem Inspector verbunden werden.
 
-Die mitgelieferte [`inspector.json`](../inspector.json) enthält `webshop-local` für `http://localhost:3052/mcp` und `webshop-remote` für die Fly-App. Beide verwenden `protocolEra: "modern"`, weil der Server die MCP-Revision 2026-07-28 verwendet.
+Die mitgelieferte [`inspector.json`](../inspector.json) enthält `webshop-local` und `webshop-local-app` für `http://localhost:3052/mcp` bzw. `/mcp-app` sowie `webshop-remote` und `webshop-remote-app` für die Fly-App. Alle verwenden `protocolEra: "modern"`, weil der Server die MCP-Revision 2026-07-28 verwendet.
 
 ```bash
 npm run inspector
 ```
 
-Im Inspector `webshop-remote` auswählen und verbinden. Falls die App auf null Machines skaliert wurde, zuerst mit `fly deploy --ha=false` wieder deployen.
+Im Inspector `webshop-remote-app` (mit UI) oder `webshop-remote` (nur Text) auswählen und verbinden. Falls die App auf null Machines skaliert wurde, zuerst mit `fly deploy --ha=false` wieder deployen.
 
 **Produktsuche:** `searchProducts` mit `{ "term": "Vollmilch", "loginId": "restaurant-baeren" }` aufrufen. Das Resultat muss `ok: true` und Produktkarten enthalten; im MCP-App-Bereich erscheint die Produktsuche.
 

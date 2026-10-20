@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as McpAppRouteImport } from './routes/mcp-app'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -24,6 +25,11 @@ import { Route as ApiCartCheckoutRouteImport } from './routes/api/cart/checkout'
 import { Route as ApiArticleArticleNumberRouteImport } from './routes/api/article/$articleNumber'
 import { Route as ApiCartItemsArticleNumberRouteImport } from './routes/api/cart/items/$articleNumber'
 
+const McpAppRoute = McpAppRouteImport.update({
+  id: '/mcp-app',
+  path: '/mcp-app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/health': typeof HealthRoute
   '/mcp': typeof McpRoute
+  '/mcp-app': typeof McpAppRoute
   '/api/cart': typeof ApiCartRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/orders': typeof ApiOrdersRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/health': typeof HealthRoute
   '/mcp': typeof McpRoute
+  '/mcp-app': typeof McpAppRoute
   '/api/cart': typeof ApiCartRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/orders': typeof ApiOrdersRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/health': typeof HealthRoute
   '/mcp': typeof McpRoute
+  '/mcp-app': typeof McpAppRoute
   '/api/cart': typeof ApiCartRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/api/orders': typeof ApiOrdersRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/health'
     | '/mcp'
+    | '/mcp-app'
     | '/api/cart'
     | '/api/chat'
     | '/api/orders'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/health'
     | '/mcp'
+    | '/mcp-app'
     | '/api/cart'
     | '/api/chat'
     | '/api/orders'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/health'
     | '/mcp'
+    | '/mcp-app'
     | '/api/cart'
     | '/api/chat'
     | '/api/orders'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   HealthRoute: typeof HealthRoute
   McpRoute: typeof McpRoute
+  McpAppRoute: typeof McpAppRoute
   ApiCartRoute: typeof ApiCartRouteWithChildren
   ApiChatRoute: typeof ApiChatRoute
   ApiOrdersRoute: typeof ApiOrdersRoute
@@ -212,6 +225,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/mcp-app': {
+      id: '/mcp-app'
+      path: '/mcp-app'
+      fullPath: '/mcp-app'
+      preLoaderRoute: typeof McpAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mcp': {
       id: '/mcp'
       path: '/mcp'
@@ -344,6 +364,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   HealthRoute: HealthRoute,
   McpRoute: McpRoute,
+  McpAppRoute: McpAppRoute,
   ApiCartRoute: ApiCartRouteWithChildren,
   ApiChatRoute: ApiChatRoute,
   ApiOrdersRoute: ApiOrdersRoute,

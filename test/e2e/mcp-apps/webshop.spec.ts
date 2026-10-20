@@ -33,7 +33,9 @@ test.beforeEach(async ({ page, request }) => {
   const client = new Client({ name: 'mcp-app-test-setup', version: '1.0.0' })
   try {
     await client.connect(
-      new StreamableHTTPClientTransport(new URL('http://127.0.0.1:43554/mcp')),
+      new StreamableHTTPClientTransport(
+        new URL('http://127.0.0.1:43554/mcp-app'),
+      ),
     )
     for (const loginId of ['restaurant-baeren', 'hotel-alpenblick']) {
       const cart = await client.callTool({

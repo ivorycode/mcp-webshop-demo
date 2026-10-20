@@ -75,7 +75,7 @@ test(
       try {
         await client.connect(
           new StreamableHTTPClientTransport(
-            new URL(`http://127.0.0.1:${port}/mcp`),
+            new URL(`http://127.0.0.1:${port}/mcp-app`),
           ),
         )
         for (const uri of [

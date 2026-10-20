@@ -23,13 +23,13 @@ for (const port of [43553, 43552]) {
       host: '127.0.0.1',
       port,
       strictPort: true,
-      proxy: port === 43552 ? { '/mcp': mcpOrigin } : undefined,
+      proxy: port === 43552 ? { '/mcp-app': mcpOrigin } : undefined,
     },
   })
   await server.listen()
   servers.push(server)
 }
-console.log(`MCP-App-Host: http://127.0.0.1:43552 (MCP: ${mcpOrigin}/mcp)`)
+console.log(`MCP-App-Host: http://127.0.0.1:43552 (MCP: ${mcpOrigin}/mcp-app)`)
 console.log('Webshop und Mock-Katalog müssen separat laufen.')
 
 for (const signal of ['SIGINT', 'SIGTERM']) {

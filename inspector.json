@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "webshop-local": {
+      "type": "http",
+      "url": "http://localhost:3052/mcp",
+      "protocolEra": "modern"
+    },
+    "webshop-remote": {
+      "type": "http",
+      "url": "https://mcp-webshop-demo.fly.dev/mcp",
+      "protocolEra": "modern"
+    }
+  }
+}

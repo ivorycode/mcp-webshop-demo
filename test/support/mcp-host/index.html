@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Webshop MCP Testhost</title>
+    <style>
+      body {
+        font: 16px system-ui;
+        margin: 16px;
+      }
+      form {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: end;
+      }
+      label {
+        display: grid;
+        gap: 4px;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        padding: 8px;
+      }
+      iframe {
+        width: 100%;
+        height: 900px;
+        border: 1px solid #ccc;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Webshop MCP Testhost</h1>
+    <form>
+      <label
+        >App<select id="tool" aria-label="App">
+          <option value="searchProducts">Produktsuche</option>
+          <option value="getCart">Warenkorb</option>
+          <option value="checkout">Checkout (Mock)</option>
+        </select></label
+      >
+      <label>Login-ID<input id="login" value="restaurant-baeren" /></label>
+      <label>Suchbegriff<input id="term" value="Vollmilch" /></label>
+      <button type="submit" disabled>App laden</button>
+    </form>
+    <p role="status">Verbinde …</p>
+    <div id="view"></div>
+    <h2>Modellkontext</h2>
+    <pre id="context"></pre>
+    <h2>Nachrichten der App</h2>
+    <pre id="messages"></pre>
+    <script type="module" src="/host.ts"></script>
+  </body>
+</html>

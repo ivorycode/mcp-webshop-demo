@@ -52,19 +52,16 @@ export const APP_RESULT_HINT =
 
 /** MCP-Resultat: Text für das Modell, strukturierte Daten für Host und App. */
 function toolResult(data: ToolData, text: string, mode: ResultMode) {
-  const content =
-    mode === 'app' && data.ok
-      ? // Die App zeigt die Daten; das Modell soll sie nicht wiederholen.
-        // structuredContent bleibt, damit Folgeaufrufe Artikelnummern kennen.
-        [{ type: 'text' as const, text: `${text} ${APP_RESULT_HINT}` }]
-      : // Manche Hosts geben nur content an das Modell weiter. Die Daten müssen
-        // auch dort stehen, damit Folgeaufrufe z. B. Artikelnummern verwenden können.
-        [
-          { type: 'text' as const, text },
-          { type: 'text' as const, text: JSON.stringify(data) },
-        ]
+  // Im App-Modus zeigt das Widget die Daten; das Modell soll sie nicht wiederholen.
+  const summary =
+    mode === 'app' && data.ok ? `${text} ${APP_RESULT_HINT}` : text
   return {
-    content,
+    // Manche Hosts (z. B. claude.ai) geben nur content an das Modell weiter.
+    // Die Daten müssen auch dort stehen, damit Folgeaufrufe Artikelnummern kennen.
+    content: [
+      { type: 'text' as const, text: summary },
+      { type: 'text' as const, text: JSON.stringify(data) },
+    ],
     structuredContent: data,
     ...(data.ok ? {} : { isError: true }),
   }

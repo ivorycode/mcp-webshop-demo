@@ -9,12 +9,12 @@ HTML-Resources. Die Tests laufen auch als Teil von `npm test`.
 
 `test/mcp-smoke.test.mjs` prüft Tool-Registrierung, stufenspezifische Metadaten
 und den gemeinsamen Zustand von HTTP-MCP und Web-API. Die lokale Hilfsdatei
-`test/mcp-tool-contract.mjs` ergänzt für **beide Transporte** je acht Subtests:
+`test/mcp-tool-contract.mjs` ergänzt für **beide Transporte** je neun Subtests:
 
 - Suche mit und ohne Konto, echte Mock-Produkte, maximal fünf Treffer und Textantwort.
-- App-Resultat: genau ein Text-Block mit Kurzsatz und Hinweis, dass die App die
-  Daten bereits zeigt; kein JSON-Block, Daten nur in `structuredContent`. Fehler
-  behalten Text und JSON.
+- App-Resultat: Kurzsatz mit Hinweis, dass die App die Daten bereits zeigt, plus
+  JSON-Block, der `structuredContent` entspricht. Fehler behalten Text ohne
+  Hinweis und JSON.
 - Erfolg mit leerer Trefferliste bei unbekanntem Suchbegriff.
 - Unbekannte Konten bei allen sechs Tools samt Hinweisen auf gültige Konten.
 - Schemafehler: fehlende Pflichtfelder, leere Strings, falsche Typen und Mengengrenzen.
@@ -24,7 +24,8 @@ und den gemeinsamen Zustand von HTTP-MCP und Web-API. Die lokale Hilfsdatei
 - Fachliche Fehler bei leerem Checkout, fehlendem Artikel und Überschreiten der
   kumulierten Höchstmenge; fehlgeschlagene Aktionen verändern den Zustand nicht.
 
-Nur für den Text-Endpunkt `/mcp` läuft zusätzlich der Einkauf nur aus `content`:
+Für beide Transporte und zusätzlich für den Text-Endpunkt `/mcp` läuft der Einkauf
+nur aus `content`, weil Hosts wie claude.ai dem Modell nur `content` übergeben:
 Produkt anhand der Bezeichnung auswählen, Artikelnummer, Preis und Verkaufseinheit
 aus dem JSON-Block lesen, zwei Einheiten hinzufügen und Warenkorb prüfen.
 

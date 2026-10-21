@@ -274,23 +274,25 @@ export async function testMcpToolContract(t, client) {
   )
 
   await t.test(
-    'an app result carries one short text with the hint and no JSON block',
+    'an app result keeps the JSON block and adds the hint to the summary',
     async () => {
-      // The App renders the data; the model only gets a sentence plus the hint
-      // and must not repeat what the UI already shows. Data stays in structuredContent.
+      // The App renders the data, so the summary tells the model not to repeat
+      // it. The JSON block stays because hosts like claude.ai pass only content
+      // to the model and it still needs article numbers for follow-up calls.
       const result = await client.callTool({
         name: 'searchProducts',
         arguments: { term: 'Milch', loginId: 'kantine-campus' },
       })
       success(result)
       const blocks = result.content.filter((block) => block.type === 'text')
-      assert.equal(blocks.length, 1)
+      assert.equal(blocks.length, 2)
       assert.match(blocks[0].text, /Produkte für "Milch" gefunden\./)
       assert.match(blocks[0].text, /bereits in der App angezeigt/)
       assert.doesNotMatch(blocks[0].text, /"articles"/)
+      assert.deepEqual(JSON.parse(blocks[1].text), result.structuredContent)
       assert.ok(result.structuredContent.articles.length > 0)
 
-      // Errors keep the plain text and the JSON block so the model can explain them.
+      // Errors keep the plain text without the hint plus the JSON block.
       const invalid = await client.callTool({
         name: 'getCart',
         arguments: { loginId: 'unbekannt' },
@@ -300,11 +302,13 @@ export async function testMcpToolContract(t, client) {
       assert.match(text(invalid), /"validAccounts"/)
     },
   )
+
+  await testContentOnlyPurchase(t, client)
 }
 
 /**
- * Text-only server (/mcp): some hosts pass only content to the model, so the
- * JSON data must be part of content as well.
+ * Some hosts pass only content to the model, so the JSON data must be part of
+ * content on every endpoint. Runs for app clients via the contract and for /mcp.
  */
 export async function testContentOnlyPurchase(t, client) {
   await t.test(

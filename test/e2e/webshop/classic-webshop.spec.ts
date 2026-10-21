@@ -41,6 +41,36 @@ test('hydrates cleanly when WebMCP is available before React starts', async ({
   expect(errors).toEqual([])
 })
 
+test('tool console can be hidden by shortcut and URL parameter', async ({
+  page,
+}) => {
+  const toggle = page.getByRole('button', { name: 'WebMCP nicht verfügbar' })
+  await page.goto('/')
+  await expect(toggle).toBeVisible()
+
+  // Der Listener hängt erst nach der Hydration; bis dahin erneut drücken.
+  await expect(async () => {
+    await page.keyboard.press('Control+Shift+Alt+KeyW')
+    await expect(toggle).toHaveCount(0, { timeout: 500 })
+  }).toPass()
+  await page.reload()
+  await expect(
+    page.getByRole('heading', { name: 'Demo Web Shop', exact: true }),
+  ).toBeVisible()
+  await expect(toggle).toHaveCount(0)
+
+  await page.keyboard.press('Control+Shift+Alt+KeyW')
+  await expect(toggle).toBeVisible()
+
+  await page.goto('/?webmcp-console=0')
+  await expect(
+    page.getByRole('heading', { name: 'Demo Web Shop', exact: true }),
+  ).toBeVisible()
+  await expect(toggle).toHaveCount(0)
+  await page.goto('/?webmcp-console=1')
+  await expect(toggle).toBeVisible()
+})
+
 test('classic webshop stays usable without the experimental WebMCP API', async ({
   page,
 }, testInfo) => {

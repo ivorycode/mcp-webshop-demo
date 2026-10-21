@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
 
+const HIDDEN_KEY = 'webmcp-console-hidden'
+const SHORTCUT = 'Ctrl+Shift+Alt+W'
+
 /**
  * Kleines Dev-Panel: listet die per WebMCP registrierten Tools (getTools) und
  * führt eines mit JSON-Eingabe aus (executeTool). Ersetzt für Tests den Agenten.
+ * Mit Ctrl+Shift+Alt+W oder ?webmcp-console=0|1 aus- und einblendbar; der
+ * Zustand bleibt in localStorage erhalten.
  */
 export default function ToolConsole() {
+  const [hidden, setHidden] = useState(false)
   const [open, setOpen] = useState(false)
   const [tools, setTools] = useState<Array<WebMCPRegisteredTool>>([])
   const [selected, setSelected] = useState('')
@@ -14,6 +20,32 @@ export default function ToolConsole() {
   const [available, setAvailable] = useState(false)
 
   const tool = tools.find((t) => t.name === selected)
+
+  // Erst nach der Hydration lesen, damit Server- und Client-Markup übereinstimmen.
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get(
+      'webmcp-console',
+    )
+    if (param === '0') localStorage.setItem(HIDDEN_KEY, '1')
+    if (param === '1') localStorage.removeItem(HIDDEN_KEY)
+    setHidden(localStorage.getItem(HIDDEN_KEY) === '1')
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      // event.code statt event.key: Alt erzeugt auf macOS Sonderzeichen.
+      if (
+        !(event.ctrlKey && event.shiftKey && event.altKey) ||
+        event.code !== 'KeyW'
+      )
+        return
+      event.preventDefault()
+      const next = localStorage.getItem(HIDDEN_KEY) !== '1'
+      if (next) localStorage.setItem(HIDDEN_KEY, '1')
+      else localStorage.removeItem(HIDDEN_KEY)
+      setHidden(next)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   useEffect(() => {
     const context = document.modelContext
@@ -61,11 +93,14 @@ export default function ToolConsole() {
     }
   }
 
+  if (hidden) return null
+
   return (
     <div className="fixed right-4 bottom-24 z-40 w-[min(28rem,calc(100vw-2rem))] text-sm">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
+        title={`Aus- und einblenden mit ${SHORTCUT}`}
         className="ml-auto block rounded-full border border-[var(--line)] bg-white px-4 py-2 font-semibold text-[var(--ink-strong)] shadow"
       >
         {available

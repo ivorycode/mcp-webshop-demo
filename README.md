@@ -24,7 +24,7 @@ Aufgabenstellung: [Starter](../02-webshop-webmcp/EXERCISE.md). Alle Übungsschri
 ### Manueller Smoke im Browser
 
 1. In Chrome `chrome://flags/#enable-webmcp-testing` aktivieren und Chrome neu starten.
-2. App öffnen, eines der drei Demo-Konten auswählen und die WebMCP Tool-Konsole unten rechts öffnen.
+2. App öffnen, eines der drei Demo-Konten auswählen und die WebMCP Tool-Konsole unten rechts öffnen. Mit `Ctrl+Shift+Alt+W` lässt sich die Konsole aus- und wieder einblenden (z. B. für Demos); der Zustand bleibt über Reloads erhalten. Alternativ per URL: `?webmcp-console=0` blendet aus, `?webmcp-console=1` ein.
 3. Registrierung mit `await document.modelContext.getTools()` prüfen.
 4. `searchProducts`, `addToCart`, `getCart` und `checkout` ausführen; Suche, Warenkorb und Bestellverlauf müssen sofort nachziehen.
 5. Alternativ die Extension «WebMCP - Model Context Tool Inspector» öffnen und dieselben Tools im Side Panel ausführen.

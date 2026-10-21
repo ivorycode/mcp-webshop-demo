@@ -9,7 +9,11 @@ import {
 } from '@modelcontextprotocol/client'
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
 
-import { startMockCatalog, testMcpToolContract } from './mcp-tool-contract.mjs'
+import {
+  startMockCatalog,
+  testContentOnlyPurchase,
+  testMcpToolContract,
+} from './mcp-tool-contract.mjs'
 
 const projectRoot = new URL('../', import.meta.url)
 const expectedTools = [
@@ -113,6 +117,10 @@ test('real Streamable HTTP exposes the account-based MCP tools with and without 
   assert.deepEqual(searchUi.contents[0]?._meta?.ui?.csp?.resourceDomains, [
     'https://webshop.transgourmet.ch',
   ])
+  assert.match(
+    searchUi.contents[0]?._meta?.['openai/widgetDescription'] ?? '',
+    /Suchtreffer/,
+  )
   assert.deepEqual(searchUi.contents[0]?._meta?.csp?.resourceDomains, [
     'https://webshop.transgourmet.ch',
   ])
@@ -252,6 +260,12 @@ test('real Streamable HTTP exposes the account-based MCP tools with and without 
   })
   assert.equal(textSearchResult.structuredContent?.ok, true, diagnostics)
   assert.equal('loginId' in textSearchResult.structuredContent, false)
+  const textBlocks = textSearchResult.content.filter(
+    ({ type }) => type === 'text',
+  )
+  assert.equal(textBlocks.length, 2)
+  assert.doesNotMatch(textBlocks[0].text, /bereits in der App angezeigt/)
+  await testContentOnlyPurchase(t, textClient)
 })
 
 test('real stdio uses the same MCP server factory', async (t) => {

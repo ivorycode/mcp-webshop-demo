@@ -30,5 +30,21 @@ const csp: McpUiResourceMeta['csp'] = {
  * Resource-Metadaten: `_meta.ui` ist die spezifikationskonforme Form.
  * MCP Inspector 2.3.0 liest die CSP beim Rendern noch aus dem flachen
  * `_meta.csp`; deshalb beide Formen.
+ *
+ * `openai/widgetDescription` kennt nur ChatGPT: Der Text geht beim Laden der
+ * App ans Modell und dämpft die doppelte Textzusammenfassung. MCP Apps hat
+ * dafür kein Gegenstück; andere Hosts ignorieren den Schlüssel.
  */
-export const uiResourceMeta = { ui: { csp } satisfies McpUiResourceMeta, csp }
+export function uiResourceMeta(widgetDescription: string) {
+  return {
+    ui: { csp } satisfies McpUiResourceMeta,
+    csp,
+    'openai/widgetDescription': widgetDescription,
+  }
+}
+
+export const SEARCH_UI_DESCRIPTION =
+  'Zeigt die Suchtreffer als Produktkarten mit Bild, Artikelnummer, Preis und Warenkorb-Button. Die Treffer müssen im Text nicht wiederholt werden.'
+
+export const CART_UI_DESCRIPTION =
+  'Zeigt den Warenkorb mit Positionen, Mengen und Gesamtbetrag sowie Bestellungen und Checkout-Button. Der Inhalt muss im Text nicht wiederholt werden.'

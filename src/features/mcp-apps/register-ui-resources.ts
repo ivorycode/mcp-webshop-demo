@@ -8,7 +8,13 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { RESOURCE_MIME_TYPE } from '@modelcontextprotocol/ext-apps'
 import type { McpServer } from '@modelcontextprotocol/server'
-import { CART_UI_URI, SEARCH_UI_URI, uiResourceMeta } from './resource-meta.ts'
+import {
+  CART_UI_DESCRIPTION,
+  CART_UI_URI,
+  SEARCH_UI_DESCRIPTION,
+  SEARCH_UI_URI,
+  uiResourceMeta,
+} from './resource-meta.ts'
 
 // Der Prozess startet lokal im Projektverzeichnis und auf Fly in /app.
 const distDir = path.resolve(process.cwd(), 'dist')
@@ -28,18 +34,20 @@ function registerUiResource(
   name: string,
   uri: string,
   fileName: string,
+  widgetDescription: string,
 ): void {
+  const _meta = uiResourceMeta(widgetDescription)
   server.registerResource(
     name,
     uri,
-    { title: name, mimeType: RESOURCE_MIME_TYPE, _meta: uiResourceMeta },
+    { title: name, mimeType: RESOURCE_MIME_TYPE, _meta },
     async () => ({
       contents: [
         {
           uri,
           mimeType: RESOURCE_MIME_TYPE,
           text: await readUiHtml(fileName),
-          _meta: uiResourceMeta,
+          _meta,
         },
       ],
     }),
@@ -52,6 +60,13 @@ export function registerUiResources(server: McpServer): void {
     'Webshop Produktsuche',
     SEARCH_UI_URI,
     'search-ui.html',
+    SEARCH_UI_DESCRIPTION,
   )
-  registerUiResource(server, 'Webshop Warenkorb', CART_UI_URI, 'cart-ui.html')
+  registerUiResource(
+    server,
+    'Webshop Warenkorb',
+    CART_UI_URI,
+    'cart-ui.html',
+    CART_UI_DESCRIPTION,
+  )
 }

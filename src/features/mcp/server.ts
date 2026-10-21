@@ -36,21 +36,41 @@ const withLoginId = <T extends z.ZodRawShape>(schema: z.ZodObject<T>) =>
 
 type ToolData = Record<string, unknown> & { ok: boolean }
 
+/**
+ * Wer das Resultat liest. `text`: nur das Modell, `app`: das Modell und eine
+ * MCP App, die dieselben Daten bereits als UI zeigt.
+ */
+type ResultMode = 'text' | 'app'
+
+/**
+ * Hinweis an das Modell im App-Modus. Ohne ihn fasst ChatGPT die Daten, die
+ * das Widget schon zeigt, zusätzlich als Text zusammen.
+ */
+export const APP_RESULT_HINT =
+  'Die Daten werden dem Benutzer bereits in der App angezeigt. ' +
+  'Liste sie nicht erneut auf, sondern beantworte nur die Frage und biete nächste Schritte an.'
+
 /** MCP-Resultat: Text für das Modell, strukturierte Daten für Host und App. */
-function toolResult(data: ToolData, text: string) {
+function toolResult(data: ToolData, text: string, mode: ResultMode) {
+  const content =
+    mode === 'app' && data.ok
+      ? // Die App zeigt die Daten; das Modell soll sie nicht wiederholen.
+        // structuredContent bleibt, damit Folgeaufrufe Artikelnummern kennen.
+        [{ type: 'text' as const, text: `${text} ${APP_RESULT_HINT}` }]
+      : // Manche Hosts geben nur content an das Modell weiter. Die Daten müssen
+        // auch dort stehen, damit Folgeaufrufe z. B. Artikelnummern verwenden können.
+        [
+          { type: 'text' as const, text },
+          { type: 'text' as const, text: JSON.stringify(data) },
+        ]
   return {
-    // Manche Hosts geben nur content an das Modell weiter. Die Daten müssen
-    // auch dort stehen, damit Folgeaufrufe z. B. Artikelnummern verwenden können.
-    content: [
-      { type: 'text' as const, text },
-      { type: 'text' as const, text: JSON.stringify(data) },
-    ],
+    content,
     structuredContent: data,
     ...(data.ok ? {} : { isError: true }),
   }
 }
 
-function invalidLogin(loginId: string) {
+function invalidLogin(loginId: string, mode: ResultMode) {
   const validAccounts = DEMO_ACCOUNTS.map((account) => account.loginId)
   return toolResult(
     {
@@ -59,11 +79,13 @@ function invalidLogin(loginId: string) {
       validAccounts: DEMO_ACCOUNTS,
     },
     `Unbekanntes Demo-Konto. Gültig sind: ${validAccounts.join(', ')}.`,
+    mode,
   )
 }
 
 /** Prüft die loginId und reicht sie an den Handler weiter. */
 function withAccount<TInput extends { loginId: string }>(
+  mode: ResultMode,
   run: (
     loginId: string,
     input: TInput,
@@ -71,7 +93,9 @@ function withAccount<TInput extends { loginId: string }>(
 ) {
   return (input: TInput) => {
     const account = findAccount(input.loginId)
-    return account ? run(account.loginId, input) : invalidLogin(input.loginId)
+    return account
+      ? run(account.loginId, input)
+      : invalidLogin(input.loginId, mode)
   }
 }
 
@@ -100,6 +124,7 @@ export function buildMcpServer(): McpServer {
 
 /** Registriert die sechs Shop-Tools, mit uiMeta zusätzlich für MCP Apps. */
 export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
+  const mode: ResultMode = uiMeta ? 'app' : 'text'
   const searchDescription = uiMeta
     ? `${toolDescriptions.searchProducts} Mit loginId kann die Such-App Artikel direkt in den Warenkorb legen.`
     : toolDescriptions.searchProducts
@@ -113,13 +138,14 @@ export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
       _meta: uiMeta?.searchProducts,
     },
     async ({ term, loginId }: z.infer<typeof searchWithLoginInput>) => {
-      if (loginId && !findAccount(loginId)) return invalidLogin(loginId)
+      if (loginId && !findAccount(loginId)) return invalidLogin(loginId, mode)
       const data = await toolHandlers.searchProducts({ term })
       return toolResult(
         uiMeta ? { ...data, loginId: loginId ?? null } : data,
         data.ok
           ? `${data.shownCount} Produkte für "${data.searchTerm}" gefunden.`
           : data.error,
+        mode,
       )
     },
   )
@@ -133,13 +159,14 @@ export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
       annotations: { readOnlyHint: true, idempotentHint: true },
       _meta: uiMeta?.getCart,
     },
-    withAccount((loginId) => {
+    withAccount(mode, (loginId) => {
       const data = cartPayload(loginId, toolHandlers.getCart(loginId))
       return toolResult(
         data,
         data.totalItems
           ? `Warenkorb enthält ${data.totalItems} Artikel.`
           : 'Der Warenkorb ist leer.',
+        mode,
       )
     }),
   )
@@ -157,7 +184,7 @@ export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
       },
       _meta: uiMeta?.addToCart,
     },
-    withAccount(async (loginId, { articleNumber, quantity }) => {
+    withAccount(mode, async (loginId, { articleNumber, quantity }) => {
       const data = await toolHandlers.addToCart(loginId, {
         articleNumber,
         quantity,
@@ -165,6 +192,7 @@ export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
       return toolResult(
         cartPayload(loginId, data),
         data.ok ? `Artikel ${articleNumber} hinzugefügt.` : data.error,
+        mode,
       )
     }),
   )
@@ -182,11 +210,12 @@ export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
       },
       _meta: uiMeta?.removeFromCart,
     },
-    withAccount((loginId, { articleNumber }) => {
+    withAccount(mode, (loginId, { articleNumber }) => {
       const data = toolHandlers.removeFromCart(loginId, { articleNumber })
       return toolResult(
         cartPayload(loginId, data),
         data.ok ? `Artikel ${articleNumber} entfernt.` : data.error,
+        mode,
       )
     }),
   )
@@ -205,15 +234,18 @@ export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
       },
       _meta: uiMeta?.checkout,
     },
-    withAccount((loginId) => {
+    withAccount(mode, (loginId) => {
       const data = toolHandlers.checkout(loginId)
-      if (!data.ok) return toolResult(cartPayload(loginId, data), data.error)
+      if (!data.ok) {
+        return toolResult(cartPayload(loginId, data), data.error, mode)
+      }
       // Nach dem Checkout zeigt die Warenkorb-App den (leeren) Warenkorb und
       // die Bestätigung; dafür liefert das Resultat beides.
       const cart = cartPayload(loginId, toolHandlers.getCart(loginId))
       return toolResult(
         { ...data, loginId, cart },
         `Bestellung ${data.orderId} übermittelt.`,
+        mode,
       )
     }),
   )
@@ -227,9 +259,13 @@ export function registerShopTools(server: McpServer, uiMeta?: ToolUiMeta) {
       annotations: { readOnlyHint: true, idempotentHint: true },
       _meta: uiMeta?.getOrders,
     },
-    withAccount((loginId) => {
+    withAccount(mode, (loginId) => {
       const data = cartPayload(loginId, toolHandlers.getCart(loginId))
-      return toolResult(data, `${data.orders.length} Bestellungen gefunden.`)
+      return toolResult(
+        data,
+        `${data.orders.length} Bestellungen gefunden.`,
+        mode,
+      )
     }),
   )
 }

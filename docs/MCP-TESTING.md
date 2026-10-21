@@ -12,8 +12,9 @@ und den gemeinsamen Zustand von HTTP-MCP und Web-API. Die lokale Hilfsdatei
 `test/mcp-tool-contract.mjs` ergänzt für **beide Transporte** je acht Subtests:
 
 - Suche mit und ohne Konto, echte Mock-Produkte, maximal fünf Treffer und Textantwort.
-- Einkauf nur aus `content`: Produkt anhand der Bezeichnung auswählen, Artikelnummer,
-  Preis und Verkaufseinheit lesen, zwei Einheiten hinzufügen und Warenkorb prüfen.
+- App-Resultat: genau ein Text-Block mit Kurzsatz und Hinweis, dass die App die
+  Daten bereits zeigt; kein JSON-Block, Daten nur in `structuredContent`. Fehler
+  behalten Text und JSON.
 - Erfolg mit leerer Trefferliste bei unbekanntem Suchbegriff.
 - Unbekannte Konten bei allen sechs Tools samt Hinweisen auf gültige Konten.
 - Schemafehler: fehlende Pflichtfelder, leere Strings, falsche Typen und Mengengrenzen.
@@ -22,6 +23,10 @@ und den gemeinsamen Zustand von HTTP-MCP und Web-API. Die lokale Hilfsdatei
   `getOrders`: Mengen, Beträge, Kontentrennung, neue Cart-ID und Textantworten.
 - Fachliche Fehler bei leerem Checkout, fehlendem Artikel und Überschreiten der
   kumulierten Höchstmenge; fehlgeschlagene Aktionen verändern den Zustand nicht.
+
+Nur für den Text-Endpunkt `/mcp` läuft zusätzlich der Einkauf nur aus `content`:
+Produkt anhand der Bezeichnung auswählen, Artikelnummer, Preis und Verkaufseinheit
+aus dem JSON-Block lesen, zwei Einheiten hinzufügen und Warenkorb prüfen.
 
 Im MCP-Server-Starter prüft `npm run test:mcp` weiterhin das vorbereitete Gerüst.
 Erst `npm run test:exercise` aktiviert dort die vollständige Abnahme; vor dem

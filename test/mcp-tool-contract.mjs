@@ -274,9 +274,42 @@ export async function testMcpToolContract(t, client) {
   )
 
   await t.test(
+    'an app result carries one short text with the hint and no JSON block',
+    async () => {
+      // The App renders the data; the model only gets a sentence plus the hint
+      // and must not repeat what the UI already shows. Data stays in structuredContent.
+      const result = await client.callTool({
+        name: 'searchProducts',
+        arguments: { term: 'Milch', loginId: 'kantine-campus' },
+      })
+      success(result)
+      const blocks = result.content.filter((block) => block.type === 'text')
+      assert.equal(blocks.length, 1)
+      assert.match(blocks[0].text, /Produkte für "Milch" gefunden\./)
+      assert.match(blocks[0].text, /bereits in der App angezeigt/)
+      assert.doesNotMatch(blocks[0].text, /"articles"/)
+      assert.ok(result.structuredContent.articles.length > 0)
+
+      // Errors keep the plain text and the JSON block so the model can explain them.
+      const invalid = await client.callTool({
+        name: 'getCart',
+        arguments: { loginId: 'unbekannt' },
+      })
+      assert.equal(invalid.isError, true)
+      assert.doesNotMatch(text(invalid), /bereits in der App angezeigt/)
+      assert.match(text(invalid), /"validAccounts"/)
+    },
+  )
+}
+
+/**
+ * Text-only server (/mcp): some hosts pass only content to the model, so the
+ * JSON data must be part of content as well.
+ */
+export async function testContentOnlyPurchase(t, client) {
+  await t.test(
     'a content-only client can search, add and verify products without UI data',
     async () => {
-      // Some hosts pass only content to the model, while the App gets structuredContent.
       const callFromText = async (name, args = {}) => {
         const result = await client.callTool({
           name,

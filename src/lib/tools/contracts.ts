@@ -11,14 +11,14 @@
 import { z } from 'zod'
 import { MAX_LINE_QUANTITY } from '../shop-rules.ts'
 
+// Texte in den Eingabe-Schemas bewusst nur in ASCII: Das WebMCP-Panel der
+// Chrome DevTools zeigt keine Parameter an, sobald das Schema Umlaute o. Ä. enthält.
 export const searchProductsInput = z.object({
   term: z
     .string()
     .trim()
     .min(1)
-    .describe(
-      'Suchbegriff für Produkte im Katalog, z. B. "Milch" oder "Basmati".',
-    ),
+    .describe('Suchbegriff im Produktkatalog, z. B. "Milch" oder "Basmati".'),
 })
 
 export const addToCartInput = z.object({

@@ -64,6 +64,16 @@ test('registers the five shared contracts and aborts them as one scope', () => {
   assert.ok(registrations.every((entry) => entry.signal?.aborted))
 })
 
+test('keeps input schemas ASCII-only for the Chrome DevTools WebMCP panel', () => {
+  for (const shopTool of shopTools) {
+    assert.match(
+      JSON.stringify(shopTool.inputSchema),
+      /^[\x20-\x7e]*$/,
+      `${shopTool.name}: inputSchema enthält Nicht-ASCII-Zeichen`,
+    )
+  }
+})
+
 test('does not log expected registration aborts during React effect cleanup', async () => {
   const errors: Array<unknown> = []
   const originalError = console.error

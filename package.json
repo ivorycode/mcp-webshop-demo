@@ -12,6 +12,7 @@
     "build:apps": "cross-env INPUT=search-ui.html vite build --config vite.apps.config.ts && cross-env INPUT=cart-ui.html vite build --config vite.apps.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node server.mjs",
+    "mock": "npm start --prefix _mock-api",
     "test": "npm run build && node --test \"src/**/*.test.ts\" \"test/**/*.test.mjs\"",
     "lint": "eslint",
     "format": "prettier --check .",

@@ -1,0 +1,16 @@
+{
+  "name": "mock-api",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Mock of the Transgourmet webshop article API used by the webshop-with-ai demo",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "download-assets": "node download-assets.mjs",
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test"
+  }
+}

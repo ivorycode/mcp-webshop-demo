@@ -1,4 +1,4 @@
-// Zugriff auf den Produktkatalog: entweder der lokale Mock (01-mock-api) oder
+// Zugriff auf den Produktkatalog: entweder der lokale Mock (_mock-api) oder
 // der Live-Katalog. Die Antworten werden auf die eigenen Typen reduziert.
 
 import type {

@@ -5,7 +5,7 @@ import { setTimeout } from 'node:timers/promises'
 // Both transports run against their own local catalog, never the live API.
 export async function startMockCatalog(t, port) {
   const mock = spawn(process.execPath, ['server.mjs'], {
-    cwd: new URL('../../../01-mock-api/', import.meta.url),
+    cwd: new URL('../_mock-api/', import.meta.url),
     env: { ...process.env, PORT: String(port), MOCK_DELAY_MS: '0' },
     stdio: ['ignore', 'ignore', 'pipe'],
   })

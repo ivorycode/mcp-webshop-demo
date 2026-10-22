@@ -5,7 +5,7 @@ Die kumulative Abschlusslösung des Workshops: klassischer Webshop, Web-API, AI-
 ```bash
 npm ci
 cp .env.example .env        # AI_PROVIDER und API-Key eintragen
-npm run dev                 # http://localhost:3052, benötigt den Mock-Katalog aus 01-mock-api
+npm run dev                 # http://localhost:3052, benötigt den Mock-Katalog aus _mock-api (npm run mock)
 npm test                    # Build + Node-Tests
 npm run typecheck
 npm run check               # Prettier + ESLint
@@ -111,7 +111,7 @@ Jeweils in einem eigenen Terminal starten; Umgebungsvariablen oder ein LLM-Key
 sind dafür bei unveränderten Defaults nicht erforderlich:
 
 ```bash
-# Im Verzeichnis 01-mock-api:
+# Im Verzeichnis _mock-api (oder npm run mock):
 npm start                   # Mock-Katalog auf Port 4040
 
 # Im Verzeichnis dieser Musterlösung:

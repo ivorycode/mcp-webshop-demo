@@ -18,7 +18,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'cross-env PORT=43557 MOCK_DELAY_MS=0 npm start --prefix ../../01-mock-api',
+        'cross-env PORT=43557 MOCK_DELAY_MS=0 npm start --prefix _mock-api',
       url: 'http://127.0.0.1:43557/health',
     },
     {
